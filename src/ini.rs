@@ -92,7 +92,11 @@ pub(crate) fn section(input: &str) -> IResult<&str, Section> {
 }
 
 pub(crate) fn attribute(input: &str) -> IResult<&str, AttributeOrNote> {
-    let (input, (s1, s2)) = separated_pair(without_chars(":"), tag(":"), not_line_ending)(input)?;
+    let (input, (s1, s2)) = separated_pair(
+        without_chars("[]:"),
+        tag(":"),
+        without_chars_and_line_ending("[]"),
+    )(input)?;
     Ok((
         input,
         AttributeOrNote::Attribute((s1.to_owned(), s2.to_owned())),
@@ -105,13 +109,9 @@ pub(crate) fn custom_attribute_with_note<'a: 'b, 'b: 'c, 'c>(
     move |input: &'b str| {
         let (input, ((k, v), note)) = separated_pair(
             separated_pair(
-                delimited(
-                    multispace0,
-                    without_chars_and_line_ending((":".to_owned() + note_starting).as_str()),
-                    multispace0,
-                ),
+                without_chars_and_line_ending(("[]:".to_owned() + note_starting).as_str()),
                 tag(":"),
-                without_chars_and_line_ending(note_starting),
+                without_chars_and_line_ending(("[]".to_owned() + note_starting).as_str()),
             ),
             tag(note_starting),
             not_line_ending,

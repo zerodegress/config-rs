@@ -5,8 +5,11 @@ use nom::{
     AsChar, Compare, CompareResult, FindToken, IResult, InputIter, InputLength, Slice,
 };
 
-pub fn anystr(input: &str) -> IResult<&str, &str> {
-    Ok(("", input))
+pub fn any<T, E: ParseError<T>>(input: T) -> IResult<T, T, E>
+where
+    T: Slice<Range<usize>> + Slice<RangeFrom<usize>> + Slice<RangeTo<usize>> + InputLength,
+{
+    Ok((input.slice(input.input_len()..), input))
 }
 
 pub fn without_chars<T, E: ParseError<T>, Q>(chars: Q) -> impl FnMut(T) -> IResult<T, T, E>
