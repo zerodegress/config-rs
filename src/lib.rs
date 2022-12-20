@@ -1,3 +1,4 @@
+#[cfg(feature = "conf")]
 pub mod conf;
 #[cfg(feature = "ini")]
 pub mod ini;

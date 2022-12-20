@@ -1,6 +1,6 @@
 [package]
 name = "config-rs"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 categories = ["config", "encoding", "parser-implementations"]
 description = "A lib of parsing config file for Rust."
@@ -16,5 +16,6 @@ repository = "https://github.com/zerodegress/config-rs"
 nom = "^7.1"
 
 [features]
-default = ["ini"]
+default = ["ini", "conf"]
 ini = []
+conf = []
