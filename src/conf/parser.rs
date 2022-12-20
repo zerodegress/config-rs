@@ -12,33 +12,11 @@ use nom::{
 
 use crate::parser::{without_chars, without_chars_and_line_ending};
 
-pub type Attribute = (String, String);
-pub type Section = (String, BTreeMap<String, String>);
-pub type Ini = BTreeMap<String, BTreeMap<String, String>>;
+use super::{Attribute, AttributeOrNote, Conf, Section};
 
-#[derive(Debug, PartialEq, Eq)]
-pub(crate) enum AttributeOrNote {
-    Attribute((String, String)),
-    AttributeWithNote {
-        attribute: (String, String),
-        note: String,
-    },
-    Note(String),
-}
-
-pub fn from_str(str: &str) -> Result<Ini, nom::Err<nom::error::Error<&str>>> {
-    Ok(ini(str)?.1)
-}
-
-pub fn from_str_custom<'a: 'b, 'b: 'c, 'c>(
+pub fn custom_conf<'a: 'b, 'b: 'c, 'c>(
     note_starting: &'a str,
-) -> impl FnMut(&'b str) -> Result<Ini, nom::Err<nom::error::Error<&'b str>>> + 'c {
-    move |str: &'b str| Ok(custom_ini(note_starting)(str)?.1)
-}
-
-pub(crate) fn custom_ini<'a: 'b, 'b: 'c, 'c>(
-    note_starting: &'a str,
-) -> impl FnMut(&'b str) -> IResult<&'b str, Ini> + 'c {
+) -> impl FnMut(&'b str) -> IResult<&'b str, Conf> + 'c {
     move |input: &'b str| {
         let (input, mut sections) = many0(custom_section(note_starting))(input)?;
         Ok((input, {
@@ -51,11 +29,11 @@ pub(crate) fn custom_ini<'a: 'b, 'b: 'c, 'c>(
     }
 }
 
-pub(crate) fn ini(input: &str) -> IResult<&str, Ini> {
-    custom_ini(";")(input)
+pub fn conf(input: &str) -> IResult<&str, Conf> {
+    custom_conf("#")(input)
 }
 
-pub(crate) fn custom_section<'a: 'b, 'b: 'c, 'c>(
+pub fn custom_section<'a: 'b, 'b: 'c, 'c>(
     note_starting: &'a str,
 ) -> impl FnMut(&'b str) -> IResult<&'b str, Section> + 'c {
     move |input: &'b str| {
@@ -87,11 +65,11 @@ pub(crate) fn custom_section<'a: 'b, 'b: 'c, 'c>(
     }
 }
 
-pub(crate) fn section(input: &str) -> IResult<&str, Section> {
+pub fn section(input: &str) -> IResult<&str, Section> {
     custom_section(";")(input)
 }
 
-pub(crate) fn attribute(input: &str) -> IResult<&str, AttributeOrNote> {
+pub fn attribute(input: &str) -> IResult<&str, AttributeOrNote> {
     let (input, (s1, s2)) = separated_pair(
         without_chars("[]:"),
         tag(":"),
@@ -103,14 +81,14 @@ pub(crate) fn attribute(input: &str) -> IResult<&str, AttributeOrNote> {
     ))
 }
 
-pub(crate) fn custom_attribute_with_note<'a: 'b, 'b: 'c, 'c>(
+pub fn custom_attribute_with_note<'a: 'b, 'b: 'c, 'c>(
     note_starting: &'a str,
 ) -> impl FnMut(&'b str) -> IResult<&'b str, AttributeOrNote> + 'c {
     move |input: &'b str| {
         let (input, ((k, v), note)) = separated_pair(
             separated_pair(
                 without_chars_and_line_ending(("[]:".to_owned() + note_starting).as_str()),
-                tag(":"),
+                tag("="),
                 without_chars_and_line_ending(("[]".to_owned() + note_starting).as_str()),
             ),
             tag(note_starting),
@@ -126,11 +104,11 @@ pub(crate) fn custom_attribute_with_note<'a: 'b, 'b: 'c, 'c>(
     }
 }
 
-pub(crate) fn attribute_with_note(input: &str) -> IResult<&str, AttributeOrNote> {
-    custom_attribute_with_note(";")(input)
+pub fn attribute_with_note(input: &str) -> IResult<&str, AttributeOrNote> {
+    custom_attribute_with_note("#")(input)
 }
 
-pub(crate) fn custom_note<'a: 'b, 'b: 'c, 'c>(
+pub fn custom_note<'a: 'b, 'b: 'c, 'c>(
     note_starting: &'a str,
 ) -> impl FnMut(&'b str) -> IResult<&'b str, AttributeOrNote> + 'c {
     move |input: &'b str| {
@@ -140,11 +118,11 @@ pub(crate) fn custom_note<'a: 'b, 'b: 'c, 'c>(
     }
 }
 
-pub(crate) fn note(input: &str) -> IResult<&str, AttributeOrNote> {
-    custom_note(";")(input)
+pub fn note(input: &str) -> IResult<&str, AttributeOrNote> {
+    custom_note("#")(input)
 }
 
-pub(crate) fn custom_attribute_or_note<'a: 'b, 'b: 'c, 'c>(
+pub fn custom_attribute_or_note<'a: 'b, 'b: 'c, 'c>(
     note_starting: &'a str,
 ) -> impl FnMut(&'b str) -> IResult<&str, Option<Attribute>> + 'c {
     move |input: &'b str| {
@@ -164,6 +142,6 @@ pub(crate) fn custom_attribute_or_note<'a: 'b, 'b: 'c, 'c>(
     }
 }
 
-pub(crate) fn attribute_or_note(input: &str) -> IResult<&str, Option<Attribute>> {
-    custom_attribute_or_note(";")(input)
+pub fn attribute_or_note(input: &str) -> IResult<&str, Option<Attribute>> {
+    custom_attribute_or_note("#")(input)
 }

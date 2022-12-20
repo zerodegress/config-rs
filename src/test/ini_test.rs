@@ -3,7 +3,11 @@ use std::collections::BTreeMap;
 #[test]
 #[cfg(feature = "ini")]
 fn ini() {
-    use crate::ini::{attribute, from_str, section, AttributeOrNote};
+    use crate::ini::{
+        from_str,
+        parser::{attribute, section},
+        AttributeOrNote,
+    };
     assert_eq!(
         attribute("key:value"),
         Ok((
