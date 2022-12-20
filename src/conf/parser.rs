@@ -70,14 +70,14 @@ pub fn section(input: &str) -> IResult<&str, Section> {
 }
 
 pub fn attribute(input: &str) -> IResult<&str, AttributeOrNote> {
-    let (input, (s1, s2)) = separated_pair(
-        without_chars("[]:"),
-        tag(":"),
+    let (input, (k, v)) = separated_pair(
+        without_chars("[]="),
+        tag("="),
         without_chars_and_line_ending("[]"),
     )(input)?;
     Ok((
         input,
-        AttributeOrNote::Attribute((s1.to_owned(), s2.to_owned())),
+        AttributeOrNote::Attribute((k.trim().to_owned(), v.trim().to_owned())),
     ))
 }
 
@@ -87,7 +87,7 @@ pub fn custom_attribute_with_note<'a: 'b, 'b: 'c, 'c>(
     move |input: &'b str| {
         let (input, ((k, v), note)) = separated_pair(
             separated_pair(
-                without_chars_and_line_ending(("[]:".to_owned() + note_starting).as_str()),
+                without_chars_and_line_ending(("[]=".to_owned() + note_starting).as_str()),
                 tag("="),
                 without_chars_and_line_ending(("[]".to_owned() + note_starting).as_str()),
             ),
@@ -97,7 +97,7 @@ pub fn custom_attribute_with_note<'a: 'b, 'b: 'c, 'c>(
         Ok((
             input,
             AttributeOrNote::AttributeWithNote {
-                attribute: (k.to_owned(), v.to_owned()),
+                attribute: (k.trim().to_owned(), v.trim().to_owned()),
                 note: note.to_owned(),
             },
         ))

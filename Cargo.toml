@@ -14,8 +14,10 @@ repository = "https://github.com/zerodegress/config-rs"
 
 [dependencies]
 nom = "^7.1"
+regex = "^1.7"
 
 [features]
-default = ["ini", "conf"]
+default = ["ini", "conf", "json"]
 ini = []
 conf = []
+json = []
